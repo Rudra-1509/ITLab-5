@@ -1,81 +1,56 @@
-/**
- * Room Repository Interface & Implementation
- * Manages game rooms and board state.
- */
-const { ROOM_STATUS } = require('../models/types');
+const databaseRoomRepository = require('../../database/repositories/roomRepository');
 
 class RoomRepository {
-  constructor() {
-    this.rooms = new Map();
+  async createRoom(data) {
+    return databaseRoomRepository.createRoom(data);
   }
 
   async create(roomData) {
-    const now = new Date().toISOString();
-    const id = roomData.id || `room_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const room = {
-      id,
-      gameId: roomData.gameId,
-      gameType: roomData.gameType || 'TIC_TAC_TOE',
-      creatorId: roomData.creatorId,
-      players: roomData.players ? [...roomData.players] : [],
-      status: roomData.status || ROOM_STATUS.WAITING,
-      board: roomData.board ? [...roomData.board] : Array(9).fill(null),
-      currentTurn: roomData.currentTurn || 'X',
-      winner: roomData.winner !== undefined ? roomData.winner : null,
-      createdAt: roomData.createdAt || now,
-      updatedAt: roomData.updatedAt || now
-    };
-
-    this.rooms.set(id, room);
-    return { ...room };
+    return databaseRoomRepository.createRoom(roomData);
   }
 
-  async findById(id) {
-    const room = this.rooms.get(id);
-    return room ? JSON.parse(JSON.stringify(room)) : null;
+  async findById(roomId) {
+    return databaseRoomRepository.findById(roomId);
   }
 
-  async findWaitingRooms() {
-    const waiting = [];
-    for (const room of this.rooms.values()) {
-      if (room.status === ROOM_STATUS.WAITING) {
-        waiting.push(JSON.parse(JSON.stringify(room)));
-      }
-    }
-    return waiting;
+  async findWaitingRooms(gameType) {
+    return databaseRoomRepository.findWaitingRooms(gameType);
   }
 
-  async findAll(filter = {}) {
-    let result = Array.from(this.rooms.values());
-    if (filter.status) {
-      result = result.filter(r => r.status === filter.status);
-    }
-    if (filter.gameType) {
-      result = result.filter(r => r.gameType === filter.gameType);
-    }
-    return result.map(r => JSON.parse(JSON.stringify(r)));
+  async joinRoom(roomId, player) {
+    return databaseRoomRepository.joinRoom(roomId, player);
+  }
+
+  async updateRoom(roomId, data) {
+    return databaseRoomRepository.updateRoom(roomId, data);
   }
 
   async update(id, updateData) {
-    const room = this.rooms.get(id);
-    if (!room) return null;
+    return databaseRoomRepository.updateRoom(id, updateData);
+  }
 
-    const updatedRoom = {
-      ...room,
-      ...updateData,
-      updatedAt: new Date().toISOString()
-    };
+  async updateBoard(roomId, board) {
+    return databaseRoomRepository.updateBoard(roomId, board);
+  }
 
-    this.rooms.set(id, updatedRoom);
-    return JSON.parse(JSON.stringify(updatedRoom));
+  async updateTurn(roomId, turn) {
+    return databaseRoomRepository.updateTurn(roomId, turn);
+  }
+
+  async completeRoom(roomId, result) {
+    return databaseRoomRepository.completeRoom(roomId, result);
+  }
+
+  async deleteRoom(roomId) {
+    return databaseRoomRepository.deleteRoom(roomId);
   }
 
   async delete(id) {
-    return this.rooms.delete(id);
+    return databaseRoomRepository.deleteRoom(id);
   }
 
-  async clear() {
-    this.rooms.clear();
+  async findAll(filter = {}) {
+    return databaseRoomRepository.findAll(filter);
   }
 }
 

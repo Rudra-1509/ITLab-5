@@ -6,17 +6,21 @@ const http = require('http');
 const os = require('os');
 const app = require('./app');
 const config = require('./config/config');
+const { connectDatabase } = require('../database/config/database');
 const { initializeSocketServer } = require('./sockets/socketServer');
 const { registerEventHandlers } = require('./events/eventHandlers');
 
 // Initialize internal event bus listeners
 registerEventHandlers();
 
-// Create HTTP server wrapping Express
-const httpServer = http.createServer(app);
+async function startServer() {
+  await connectDatabase();
 
-// Attach Socket.IO
-const io = initializeSocketServer(httpServer);
+  // Create HTTP server wrapping Express
+  const httpServer = http.createServer(app);
+
+  // Attach Socket.IO
+  const io = initializeSocketServer(httpServer);
 
 // Helper function to detect local network IPv4 addresses
 function getNetworkAddresses() {
@@ -33,42 +37,48 @@ function getNetworkAddresses() {
   return addresses;
 }
 
-const PORT = config.port;
-const HOST = config.host; // '0.0.0.0'
+  const PORT = config.port;
+  const HOST = config.host; // '0.0.0.0'
 
-httpServer.listen(PORT, HOST, () => {
-  console.log('====================================================');
-  console.log(`🚀 Multiplayer Game Server is running on port ${PORT}`);
-  console.log(`🌐 Environment: ${config.env}`);
-  console.log(`🔒 Localhost:    http://localhost:${PORT}`);
-  
-  const lanAddresses = getNetworkAddresses();
-  if (lanAddresses.length > 0) {
-    console.log('📡 LAN IP Addresses (for Developer 1 & other machines):');
-    lanAddresses.forEach(net => {
-      console.log(`   - http://${net.address}:${PORT} (${net.interface})`);
+  httpServer.listen(PORT, HOST, () => {
+    console.log('====================================================');
+    console.log(`🚀 Multiplayer Game Server is running on port ${PORT}`);
+    console.log(`🌐 Environment: ${config.env}`);
+    console.log(`🔒 Localhost:    http://localhost:${PORT}`);
+    
+    const lanAddresses = getNetworkAddresses();
+    if (lanAddresses.length > 0) {
+      console.log('📡 LAN IP Addresses (for Developer 1 & other machines):');
+      lanAddresses.forEach(net => {
+        console.log(`   - http://${net.address}:${PORT} (${net.interface})`);
+      });
+    } else {
+      console.log(`📡 Bound to all interfaces (0.0.0.0:${PORT})`);
+    }
+    console.log('⚡ Socket.IO is ready for real-time multiplayer connections');
+    console.log('====================================================');
+  });
+
+  // Handle graceful shutdown
+  process.on('SIGINT', () => {
+    console.log('\nGracefully shutting down server...');
+    httpServer.close(() => {
+      console.log('HTTP and Socket server closed.');
+      process.exit(0);
     });
-  } else {
-    console.log(`📡 Bound to all interfaces (0.0.0.0:${PORT})`);
-  }
-  console.log('⚡ Socket.IO is ready for real-time multiplayer connections');
-  console.log('====================================================');
-});
-
-// Handle graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\nGracefully shutting down server...');
-  httpServer.close(() => {
-    console.log('HTTP and Socket server closed.');
-    process.exit(0);
   });
-});
 
-process.on('SIGTERM', () => {
-  console.log('\nReceived SIGTERM, closing server...');
-  httpServer.close(() => {
-    process.exit(0);
+  process.on('SIGTERM', () => {
+    console.log('\nReceived SIGTERM, closing server...');
+    httpServer.close(() => {
+      process.exit(0);
+    });
   });
-});
 
-module.exports = { httpServer, io };
+  module.exports = { httpServer, io };
+}
+
+startServer().catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});

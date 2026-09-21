@@ -25,12 +25,15 @@ class ScoringService {
   /**
    * Process a win/loss result
    */
-  async processWin({ roomId, gameId, gameType, winnerId, loserId, customPolicy, startedAt }) {
+  async processWin({ roomId, gameId, gameType, winnerId, loserId, customPolicy, startedAt, winnerSymbol, loserSymbol }) {
     const policy = this.getPolicy(customPolicy);
     const completedAt = new Date().toISOString();
 
     const winnerCredits = policy.win;
     const loserCredits = policy.loss;
+
+    const winnerUser = await userRepository.findById(winnerId);
+    const loserUser = await userRepository.findById(loserId);
 
     // Update winner
     const updatedWinner = await userRepository.updateStats(winnerId, {
@@ -52,8 +55,14 @@ class ScoringService {
       gameType,
       roomId,
       userId: winnerId,
-      opponents: [loserId],
+      username: winnerUser?.username || '',
+      symbol: winnerSymbol || 'X',
+      players: [
+        { userId: winnerId, username: winnerUser?.username || '', symbol: winnerSymbol || 'X' },
+        { userId: loserId, username: loserUser?.username || '', symbol: loserSymbol || 'O' }
+      ],
       result: 'WIN',
+      winnerId,
       creditsAwarded: winnerCredits,
       startedAt,
       completedAt
@@ -65,8 +74,14 @@ class ScoringService {
       gameType,
       roomId,
       userId: loserId,
-      opponents: [winnerId],
+      username: loserUser?.username || '',
+      symbol: loserSymbol || 'O',
+      players: [
+        { userId: winnerId, username: winnerUser?.username || '', symbol: winnerSymbol || 'X' },
+        { userId: loserId, username: loserUser?.username || '', symbol: loserSymbol || 'O' }
+      ],
       result: 'LOSS',
+      winnerId,
       creditsAwarded: loserCredits,
       startedAt,
       completedAt
@@ -93,12 +108,22 @@ class ScoringService {
   /**
    * Process a draw result
    */
-  async processDraw({ roomId, gameId, gameType, playerIds, customPolicy, startedAt }) {
+  async processDraw({ roomId, gameId, gameType, playerIds, customPolicy, startedAt, playerSymbols = {} }) {
     const policy = this.getPolicy(customPolicy);
     const completedAt = new Date().toISOString();
     const drawCredits = policy.draw;
 
     const updatedPlayers = [];
+    const playerRecords = [];
+
+    for (const playerId of playerIds) {
+      const user = await userRepository.findById(playerId);
+      playerRecords.push({
+        userId: playerId,
+        username: user?.username || '',
+        symbol: playerSymbols[playerId] || null
+      });
+    }
 
     for (const playerId of playerIds) {
       const updated = await userRepository.updateStats(playerId, {
@@ -108,13 +133,14 @@ class ScoringService {
       });
       updatedPlayers.push(updated);
 
-      const opponents = playerIds.filter(id => id !== playerId);
       await gameHistoryRepository.create({
         gameId,
         gameType,
         roomId,
         userId: playerId,
-        opponents,
+        username: playerRecords.find(p => p.userId === playerId)?.username || '',
+        symbol: playerSymbols[playerId] || null,
+        players: playerRecords,
         result: 'DRAW',
         creditsAwarded: drawCredits,
         startedAt,

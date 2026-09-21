@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node test-demo.js"
+    "test": "node test-demo.js",
+    "db:seed": "node database/scripts/seed.js",
+    "db:test": "node -e \"require('dotenv').config({ path: './.env' }); const { connectDatabase } = require('./database/config/database'); connectDatabase().then(() => process.exit(0)).catch((error) => { console.error(error); process.exit(1); });\""
   },
   "keywords": [
     "multiplayer",
@@ -24,6 +26,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.7.4",
     "socket.io": "^4.7.5",
     "zod": "^3.23.8"
   },
