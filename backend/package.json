@@ -1,0 +1,34 @@
+{
+  "name": "multiplayer-game-backend",
+  "version": "1.0.0",
+  "description": "Backend engine for online multiplayer game platform supporting Tic-Tac-Toe, REST API, Socket.IO, event-driven architecture, and scoring.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "node test-demo.js"
+  },
+  "keywords": [
+    "multiplayer",
+    "tic-tac-toe",
+    "express",
+    "socket.io",
+    "jwt",
+    "event-driven"
+  ],
+  "author": "Backend Engineer",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "socket.io": "^4.7.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4",
+    "socket.io-client": "^4.7.5"
+  }
+}
