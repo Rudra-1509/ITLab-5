@@ -8,7 +8,10 @@
     "dev": "nodemon src/server.js",
     "test": "node test-demo.js",
     "db:seed": "node database/scripts/seed.js",
-    "db:test": "node -e \"require('dotenv').config({ path: './.env' }); const { connectDatabase } = require('./database/config/database'); connectDatabase().then(() => process.exit(0)).catch((error) => { console.error(error); process.exit(1); });\""
+    "db:test": "node -e \"require('dotenv').config({ path: './.env' }); const { connectDatabase } = require('./database/config/database'); connectDatabase().then(() => process.exit(0)).catch((error) => { console.error(error); process.exit(1); });\"",
+    "frontend": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:install": "npm --prefix frontend install"
   },
   "keywords": [
     "multiplayer",

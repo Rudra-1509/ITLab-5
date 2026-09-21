@@ -13,16 +13,6 @@ const { registerEventHandlers } = require('./events/eventHandlers');
 // Initialize internal event bus listeners
 registerEventHandlers();
 
-async function startServer() {
-  await connectDatabase();
-
-  // Create HTTP server wrapping Express
-  const httpServer = http.createServer(app);
-
-  // Attach Socket.IO
-  const io = initializeSocketServer(httpServer);
-
-// Helper function to detect local network IPv4 addresses
 function getNetworkAddresses() {
   const interfaces = os.networkInterfaces();
   const addresses = [];
@@ -37,15 +27,24 @@ function getNetworkAddresses() {
   return addresses;
 }
 
+async function startServer() {
+  await connectDatabase();
+
+  // Create HTTP server wrapping Express
+  const httpServer = http.createServer(app);
+
+  // Attach Socket.IO
+  const io = initializeSocketServer(httpServer);
+
   const PORT = config.port;
   const HOST = config.host; // '0.0.0.0'
 
-  httpServer.listen(PORT, HOST, () => {
+  httpServer.listen(PORT, HOST, async () => {
     console.log('====================================================');
     console.log(`🚀 Multiplayer Game Server is running on port ${PORT}`);
     console.log(`🌐 Environment: ${config.env}`);
     console.log(`🔒 Localhost:    http://localhost:${PORT}`);
-    
+
     const lanAddresses = getNetworkAddresses();
     if (lanAddresses.length > 0) {
       console.log('📡 LAN IP Addresses (for Developer 1 & other machines):');
@@ -57,6 +56,24 @@ function getNetworkAddresses() {
     }
     console.log('⚡ Socket.IO is ready for real-time multiplayer connections');
     console.log('====================================================');
+
+    // Pre-seed demo accounts for seamless presentation & testing
+    try {
+      const authService = require('./services/authService');
+      await authService.register({
+        username: 'Player1',
+        email: 'player1@example.com',
+        password: 'password123'
+      });
+      await authService.register({
+        username: 'Player2',
+        email: 'player2@example.com',
+        password: 'password123'
+      });
+      console.log('✅ Pre-seeded demo accounts: player1@example.com, player2@example.com (password123)');
+    } catch (e) {
+      // Ignore if already registered
+    }
   });
 
   // Handle graceful shutdown
