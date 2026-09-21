@@ -16,6 +16,7 @@ A modern, full-stack, real-time multiplayer gaming platform featuring **Multipla
 8. [Installation & Setup](#installation--setup)
    - [One-Click Windows Launcher (`start-project.bat`)](#one-click-windows-launcher-start-projectbat)
    - [Manual Local Setup](#manual-local-setup)
+   - [Quick Demo Accounts & Single-PC Testing](#quick-demo-accounts--single-pc-testing)
 9. [Database Persistence Layer (MongoDB / In-Memory)](#database-persistence-layer-mongodb--in-memory)
 10. [REST API Documentation](#rest-api-documentation)
 11. [Socket.IO Real-Time Event Protocol](#socketio-real-time-event-protocol)
@@ -309,6 +310,28 @@ npm run dev:frontend
 *The frontend Vite dev server will start on port `5173`.*
 
 Open your browser at: **`http://localhost:5173`**
+
+---
+
+### ⚡ Quick Demo Accounts & Single-PC Testing
+
+To test multiplayer gameplay immediately without manually creating accounts:
+
+#### 1. Instant 1-Click Login
+Navigate to **`http://localhost:5173/login`**. Two 1-click demo buttons are provided:
+- **`⚡ Player 1 (Alice)`**: `player1@example.com` / `password123`
+- **`⚡ Player 2 (Bob)`**: `player2@example.com` / `password123`
+
+*(These accounts are automatically pre-seeded in both MongoDB and the in-memory fallback store).*
+
+#### 2. Single-PC Testing (Browser Isolation)
+Because modern web applications store JWT credentials in `localStorage`, opening two tabs in the same browser window will overwrite the active session. For a seamless 2-player test on a single computer:
+1. **Player 1 (Host):** Open a normal browser window (e.g., Chrome) $\to$ Click `⚡ Player 1 (Alice)` $\to$ Click **"Create Game"** on the Dashboard.
+2. **Player 2 (Opponent):** Open an **Incognito / Private Window** (or an alternate browser like Firefox / Edge) $\to$ Click `⚡ Player 2 (Bob)`.
+3. **Connecting the Match:**
+   - **Method A (Lobby):** Click **"Join Game"** or go to the **Lobby (`/rooms`)** $\to$ Click **"Join"** on Alice's waiting room.
+   - **Method B (Room ID):** Enter the 6-character room code into the Dashboard input $\to$ Click **"Join by ID"**.
+   - **Method C (Direct Link):** Simply copy the URL from Player 1's address bar (e.g., `http://localhost:5173/game/<roomId>`) and paste it into Player 2's browser window. The system will automatically join Player 2 and start the match!
 
 ---
 
@@ -618,3 +641,9 @@ To play between two physical machines (e.g. Laptop A and Laptop B on the same Wi
 
 #### Q: "Room code says 'Room is already full'"
 **A:** Tic-Tac-Toe supports exactly 2 players. If 2 players have joined, other players cannot enter as participants. Create a new room from the Dashboard.
+
+#### Q: "When testing on a single computer, player 1 gets replaced or logged out when player 2 logs in"
+**A:** Web browsers share `localStorage` across tabs in the same window. To test as two separate players on the same machine, open Player 2 in an **Incognito / Private Window** or in a separate browser (e.g., Chrome and Edge).
+
+#### Q: "The game screen says 'Waiting for an opponent to join...' — how do I start?"
+**A:** Tic-Tac-Toe requires 2 players to start. Have Player 2 join by clicking **Join** on the Lobby page (`/rooms`), entering the 6-character room code on the Dashboard, or pasting the room URL directly into Player 2's browser window. As soon as Player 2 enters, the game starts automatically and Player X can make the first move.
