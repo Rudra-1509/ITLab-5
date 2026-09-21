@@ -53,6 +53,26 @@ httpServer.listen(PORT, HOST, () => {
   }
   console.log('⚡ Socket.IO is ready for real-time multiplayer connections');
   console.log('====================================================');
+
+  // Pre-seed demo accounts for seamless presentation & testing
+  (async () => {
+    try {
+      const authService = require('./services/authService');
+      await authService.register({
+        username: 'Player1',
+        email: 'player1@example.com',
+        password: 'password123'
+      });
+      await authService.register({
+        username: 'Player2',
+        email: 'player2@example.com',
+        password: 'password123'
+      });
+      console.log('✅ Pre-seeded demo accounts: player1@example.com, player2@example.com (password123)');
+    } catch (e) {
+      // Ignore if already registered
+    }
+  })();
 });
 
 // Handle graceful shutdown
