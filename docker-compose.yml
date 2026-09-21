@@ -1,4 +1,19 @@
 services:
+  mongodb:
+    image: mongo:6-jammy
+    container_name: nexus_game_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
   backend:
     build:
       context: .
@@ -11,12 +26,16 @@ services:
       - HOST=0.0.0.0
       - NODE_ENV=production
       - CORS_ORIGIN=*
+      - MONGODB_URI=mongodb://mongodb:27017/multiplayer_game_platform
       - JWT_SECRET=super_secret_jwt_key_project5_college_demo_2024
       - JWT_EXPIRES_IN=7d
       - SCORING_PARTICIPATION=5
       - SCORING_WIN=20
       - SCORING_DRAW=10
       - SCORING_LOSS=2
+    depends_on:
+      mongodb:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5000/api/health || exit 1"]
@@ -39,3 +58,6 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  mongo_data:

@@ -203,7 +203,6 @@ function setupGameSocket(io, socket) {
 
       const user = await resolveUser(socket, data);
       if (user) {
-        await roomService.leaveRoom(roomId, user.id);
         socket.to(roomId).emit('player_left', {
           roomId,
           userId: user.id,

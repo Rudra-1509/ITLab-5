@@ -6,7 +6,7 @@ class RoomRepository {
   async createRoom(data) {
     const payload = {
       id: data.id || `room_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      roomId: data.roomId || `room_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      roomId: data.roomId || data.id || `room_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       gameId: data.gameId,
       gameType: data.gameType || 'TIC_TAC_TOE',
       creatorId: data.creatorId,
@@ -14,12 +14,17 @@ class RoomRepository {
       status: data.status || 'WAITING',
       board: data.board || defaultBoard(),
       currentTurn: data.currentTurn || 'X',
+      winner: data.winner ?? data.winnerSymbol ?? null,
       winnerId: data.winnerId ?? null,
-      winnerSymbol: data.winnerSymbol ?? null
+      winnerSymbol: data.winnerSymbol ?? data.winner ?? null
     };
 
     const room = await Room.create(payload);
     return room.toObject();
+  }
+
+  async create(data) {
+    return this.createRoom(data);
   }
 
   async findById(roomId) {
@@ -65,13 +70,21 @@ class RoomRepository {
   }
 
   async updateRoom(roomId, data) {
+    const updatePayload = { ...data };
+    if (data.winner !== undefined && !data.winnerSymbol) {
+      updatePayload.winnerSymbol = data.winner;
+    }
     const room = await Room.findOneAndUpdate(
       { $or: [{ id: roomId }, { roomId }] },
-      { $set: data },
+      { $set: updatePayload },
       { new: true }
     ).lean();
 
     return room ? this.serialize(room) : null;
+  }
+
+  async update(roomId, data) {
+    return this.updateRoom(roomId, data);
   }
 
   async updateBoard(roomId, board) {
@@ -100,6 +113,7 @@ class RoomRepository {
       {
         $set: {
           status: 'COMPLETED',
+          winner: result?.winnerSymbol ?? result?.winner ?? null,
           winnerId: result?.winnerId ?? null,
           winnerSymbol: result?.winnerSymbol ?? null,
           updatedAt: new Date()
@@ -116,6 +130,10 @@ class RoomRepository {
     return result.deletedCount > 0;
   }
 
+  async delete(roomId) {
+    return this.deleteRoom(roomId);
+  }
+
   async findAll(filter = {}) {
     const rooms = await Room.find(filter).sort({ createdAt: -1 }).lean();
     return rooms.map(room => this.serialize(room));
@@ -127,6 +145,7 @@ class RoomRepository {
     if (serialized.id === undefined && serialized._id) {
       serialized.id = serialized._id.toString();
     }
+    serialized.winner = serialized.winner !== undefined ? serialized.winner : (serialized.winnerSymbol || null);
     delete serialized._id;
     delete serialized.__v;
     return serialized;

@@ -1,35 +1,28 @@
 const mongoose = require('mongoose');
 const path = require('path');
+
+// Support loading .env from root or backend directory
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+require('dotenv').config({ path: path.resolve(__dirname, '../../backend/.env') });
 
-const DEFAULT_MONGODB_URI = 'mongodb://localhost:27017/multiplayer_game_platform';
+const DEFAULT_MONGODB_URI = 'mongodb://127.0.0.1:27017/multiplayer_game_platform';
 
-async function connectDatabase() {
-  const mongoUri = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
+async function connectDatabase(customUri = null) {
+  const mongoUri = customUri || process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
 
   try {
     mongoose.set('strictQuery', true);
     await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 5000
+      serverSelectionTimeoutMS: 3000
     });
 
-    console.log(`MongoDB connected: ${mongoUri}`);
+    console.log(`[Database] MongoDB connected successfully: ${mongoUri}`);
     return mongoose;
   } catch (error) {
-    console.error('MongoDB connection failed:', error.message);
+    console.warn(`[Database] MongoDB connection failed (${mongoUri}): ${error.message}`);
     throw error;
   }
 }
-
-process.on('SIGINT', async () => {
-  await mongoose.disconnect();
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  await mongoose.disconnect();
-  process.exit(0);
-});
 
 module.exports = {
   connectDatabase,

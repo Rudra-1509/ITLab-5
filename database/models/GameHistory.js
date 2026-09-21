@@ -79,9 +79,21 @@ const gameHistorySchema = new mongoose.Schema(
       type: String,
       default: null
     },
+    userId: {
+      type: String,
+      default: null
+    },
+    creditsAwarded: {
+      type: Number,
+      default: 0
+    },
+    opponents: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: []
+    },
     result: {
       type: String,
-      enum: ['WIN', 'DRAW'],
+      enum: ['WIN', 'DRAW', 'LOSS'],
       required: true
     },
     moves: {

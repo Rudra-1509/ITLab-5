@@ -28,11 +28,22 @@ export default function Login() {
     }
   };
 
-  // Quick fill helper for presentation / demo convenience
-  const quickFill = (userEmail, userPass) => {
+  // 1-Click Quick Demo Login
+  const handleQuickLogin = async (userEmail, userPass) => {
     setEmail(userEmail);
     setPassword(userPass);
     setError('');
+    setSubmitting(true);
+
+    try {
+      await login(userEmail, userPass);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Quick login error:', err);
+      setError(getErrorMessage(err));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -118,17 +129,19 @@ export default function Login() {
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => quickFill('player1@example.com', 'password123')}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors truncate"
+                onClick={() => handleQuickLogin('player1@example.com', 'password123')}
+                disabled={submitting}
+                className="px-2.5 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-white text-xs font-semibold border border-indigo-500/30 transition-all flex items-center justify-center space-x-1.5 active:scale-95 disabled:opacity-50"
               >
-                Player 1 (Alice)
+                <span>⚡ Player 1 (Alice)</span>
               </button>
               <button
                 type="button"
-                onClick={() => quickFill('player2@example.com', 'password123')}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors truncate"
+                onClick={() => handleQuickLogin('player2@example.com', 'password123')}
+                disabled={submitting}
+                className="px-2.5 py-2.5 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 hover:text-white text-xs font-semibold border border-cyan-500/30 transition-all flex items-center justify-center space-x-1.5 active:scale-95 disabled:opacity-50"
               >
-                Player 2 (Bob)
+                <span>⚡ Player 2 (Bob)</span>
               </button>
             </div>
           </div>

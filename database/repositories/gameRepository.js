@@ -23,6 +23,10 @@ class GameRepository {
     return game.toObject();
   }
 
+  async create(data) {
+    return this.createGame(data);
+  }
+
   async findById(id) {
     if (!id) return null;
     const game = await Game.findOne({ id }).lean();
@@ -33,6 +37,10 @@ class GameRepository {
     if (!gameType) return null;
     const game = await Game.findOne({ gameType: String(gameType).toUpperCase().trim() }).lean();
     return game ? this.serialize(game) : null;
+  }
+
+  async findByGameType(gameType) {
+    return this.findByType(gameType);
   }
 
   async findAll() {

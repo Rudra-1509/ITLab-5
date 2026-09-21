@@ -1,8 +1,16 @@
 /**
- * Room Repository Interface & Implementation
- * Manages game rooms and board state.
+ * Room Repository Adapter
+ * Manages game rooms and board state using MongoDB or in-memory persistence.
  */
 const { ROOM_STATUS } = require('../models/types');
+const { isMongoConnected } = require('./dbHelper');
+
+let mongoRoomRepo = null;
+try {
+  mongoRoomRepo = require('../../../database/repositories/roomRepository');
+} catch (err) {
+  mongoRoomRepo = null;
+}
 
 class RoomRepository {
   constructor() {
@@ -10,6 +18,10 @@ class RoomRepository {
   }
 
   async create(roomData) {
+    if (isMongoConnected() && mongoRoomRepo) {
+      return mongoRoomRepo.create(roomData);
+    }
+
     const now = new Date().toISOString();
     const id = roomData.id || `room_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const room = {
@@ -31,21 +43,32 @@ class RoomRepository {
   }
 
   async findById(id) {
+    if (isMongoConnected() && mongoRoomRepo) {
+      return mongoRoomRepo.findById(id);
+    }
     const room = this.rooms.get(id);
     return room ? JSON.parse(JSON.stringify(room)) : null;
   }
 
-  async findWaitingRooms() {
+  async findWaitingRooms(gameType) {
+    if (isMongoConnected() && mongoRoomRepo) {
+      return mongoRoomRepo.findWaitingRooms(gameType);
+    }
     const waiting = [];
     for (const room of this.rooms.values()) {
       if (room.status === ROOM_STATUS.WAITING) {
-        waiting.push(JSON.parse(JSON.stringify(room)));
+        if (!gameType || room.gameType === gameType) {
+          waiting.push(JSON.parse(JSON.stringify(room)));
+        }
       }
     }
     return waiting;
   }
 
   async findAll(filter = {}) {
+    if (isMongoConnected() && mongoRoomRepo) {
+      return mongoRoomRepo.findAll(filter);
+    }
     let result = Array.from(this.rooms.values());
     if (filter.status) {
       result = result.filter(r => r.status === filter.status);
@@ -57,6 +80,10 @@ class RoomRepository {
   }
 
   async update(id, updateData) {
+    if (isMongoConnected() && mongoRoomRepo) {
+      return mongoRoomRepo.update(id, updateData);
+    }
+
     const room = this.rooms.get(id);
     if (!room) return null;
 
@@ -71,6 +98,9 @@ class RoomRepository {
   }
 
   async delete(id) {
+    if (isMongoConnected() && mongoRoomRepo) {
+      return mongoRoomRepo.delete(id);
+    }
     return this.rooms.delete(id);
   }
 

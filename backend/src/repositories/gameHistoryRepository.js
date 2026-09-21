@@ -1,7 +1,15 @@
 /**
- * Game History Repository Interface & Implementation
- * Stores completed match history for users.
+ * Game History Repository Adapter
+ * Stores completed match history using MongoDB or in-memory persistence.
  */
+const { isMongoConnected } = require('./dbHelper');
+
+let mongoHistoryRepo = null;
+try {
+  mongoHistoryRepo = require('../../../database/repositories/gameHistoryRepository');
+} catch (err) {
+  mongoHistoryRepo = null;
+}
 
 class GameHistoryRepository {
   constructor() {
@@ -9,6 +17,10 @@ class GameHistoryRepository {
   }
 
   async create(record) {
+    if (isMongoConnected() && mongoHistoryRepo) {
+      return mongoHistoryRepo.create(record);
+    }
+
     const historyItem = {
       id: record.id || `hist_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       gameId: record.gameId,
@@ -27,6 +39,9 @@ class GameHistoryRepository {
   }
 
   async findByUserId(userId) {
+    if (isMongoConnected() && mongoHistoryRepo) {
+      return mongoHistoryRepo.findByUserId(userId);
+    }
     return this.history
       .filter(item => item.userId === userId)
       .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
@@ -34,7 +49,9 @@ class GameHistoryRepository {
   }
 
   async countTotalGames() {
-    // Unique room matches completed
+    if (isMongoConnected() && mongoHistoryRepo) {
+      return mongoHistoryRepo.countTotalGames();
+    }
     const uniqueRooms = new Set(this.history.map(h => h.roomId));
     return uniqueRooms.size;
   }

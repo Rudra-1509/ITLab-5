@@ -36,7 +36,7 @@ function getNetworkAddresses() {
 const PORT = config.port;
 const HOST = config.host; // '0.0.0.0'
 
-httpServer.listen(PORT, HOST, () => {
+httpServer.listen(PORT, HOST, async () => {
   console.log('====================================================');
   console.log(`🚀 Multiplayer Game Server is running on port ${PORT}`);
   console.log(`🌐 Environment: ${config.env}`);
@@ -52,20 +52,42 @@ httpServer.listen(PORT, HOST, () => {
     console.log(`📡 Bound to all interfaces (0.0.0.0:${PORT})`);
   }
   console.log('⚡ Socket.IO is ready for real-time multiplayer connections');
+
+  // Attempt database connection with graceful fallback
+  try {
+    const { connectDatabase } = require('../../database/config/database');
+    await connectDatabase();
+    console.log('📦 Persistence Layer: MongoDB (Connected)');
+  } catch (err) {
+    console.log('📦 Persistence Layer: In-Memory Datastore (Active fallback for demo)');
+  }
+
   console.log('====================================================');
 });
 
 // Handle graceful shutdown
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('\nGracefully shutting down server...');
+  try {
+    const mongoose = require('mongoose');
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      await mongoose.disconnect();
+    }
+  } catch (e) {}
   httpServer.close(() => {
     console.log('HTTP and Socket server closed.');
     process.exit(0);
   });
 });
 
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('\nReceived SIGTERM, closing server...');
+  try {
+    const mongoose = require('mongoose');
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      await mongoose.disconnect();
+    }
+  } catch (e) {}
   httpServer.close(() => {
     process.exit(0);
   });

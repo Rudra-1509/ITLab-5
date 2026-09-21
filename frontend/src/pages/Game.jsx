@@ -50,9 +50,26 @@ export default function Game() {
    */
   const loadRoomState = useCallback(async () => {
     try {
-      const response = await roomApi.getRoomById(roomId);
-      const room = response.data;
+      let response = await roomApi.getRoomById(roomId);
+      let room = response.data;
       if (room) {
+        // If room is WAITING and we are player 2, join via REST as well
+        if (
+          room.status === 'WAITING' &&
+          user?.id &&
+          !room.players.some((p) => p.userId === user.id) &&
+          room.players.length < 2
+        ) {
+          try {
+            const joinRes = await roomApi.joinRoom(roomId);
+            if (joinRes?.data) {
+              room = joinRes.data;
+            }
+          } catch (joinErr) {
+            console.warn('Auto-join room REST note:', joinErr?.response?.data || joinErr.message);
+          }
+        }
+
         setBoard(room.board || Array(9).fill(null));
         setCurrentTurn(room.currentTurn || 'X');
         setStatus(room.status || 'WAITING');
@@ -64,11 +81,10 @@ export default function Game() {
       }
     } catch (err) {
       console.warn('REST getRoomById fallback note:', err);
-      // Don't override if socket manages state
     } finally {
       setLoading(false);
     }
-  }, [roomId]);
+  }, [roomId, user?.id]);
 
   /**
    * Initialize Socket.IO connection & event listeners

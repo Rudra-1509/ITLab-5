@@ -18,6 +18,15 @@ class UserRepository {
     return user.toObject();
   }
 
+  async create(data) {
+    return this.createUser(data);
+  }
+
+  async findAll() {
+    const users = await User.find({}).lean();
+    return users.map(user => this.serialize(user));
+  }
+
   async findByEmail(email) {
     if (!email) return null;
     const user = await User.findOne({ email: String(email).toLowerCase().trim() }).lean();
@@ -47,6 +56,10 @@ class UserRepository {
     ).lean();
 
     return user ? this.serialize(user) : null;
+  }
+
+  async update(id, data) {
+    return this.updateUser(id, data);
   }
 
   async updateStats(id, stats) {

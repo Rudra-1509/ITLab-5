@@ -33,6 +33,9 @@ class GameHistoryRepository {
       roomId: data.roomId,
       gameId: data.gameId,
       gameType: data.gameType || 'TIC_TAC_TOE',
+      userId: data.userId || null,
+      opponents: data.opponents || [],
+      creditsAwarded: data.creditsAwarded || 0,
       players: normalizedPlayers,
       winnerId: data.winnerId ?? (data.result === 'WIN' ? data.userId : null),
       result: data.result || 'WIN',
@@ -45,8 +48,14 @@ class GameHistoryRepository {
     return history.toObject();
   }
 
+  async create(data) {
+    return this.createHistory(data);
+  }
+
   async findByUserId(userId) {
-    const records = await GameHistory.find({ 'players.userId': userId }).sort({ completedAt: -1 }).lean();
+    const records = await GameHistory.find({
+      $or: [{ 'players.userId': userId }, { userId }]
+    }).sort({ completedAt: -1 }).lean();
     return records.map(record => this.serialize(record));
   }
 

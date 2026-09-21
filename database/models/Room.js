@@ -71,6 +71,10 @@ const roomSchema = new mongoose.Schema(
       type: String,
       default: 'X'
     },
+    winner: {
+      type: String,
+      default: null
+    },
     winnerId: {
       type: String,
       default: null

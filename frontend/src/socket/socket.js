@@ -38,9 +38,7 @@ export function getSocket(token = null) {
   } else if (authToken && socketInstance.auth?.token !== authToken) {
     // Update auth token if it changed
     socketInstance.auth = { token: authToken };
-    if (!socketInstance.connected) {
-      socketInstance.connect();
-    }
+    socketInstance.disconnect().connect();
   }
 
   return socketInstance;

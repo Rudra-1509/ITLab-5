@@ -139,12 +139,14 @@ class RoomService {
     const leavingPlayer = room.players[playerIndex];
 
     if (room.status === ROOM_STATUS.WAITING) {
-      // Room creator leaves waiting room -> mark completed
-      await roomRepository.update(roomId, {
-        status: ROOM_STATUS.COMPLETED
-      });
+      // If a non-creator leaves waiting room, remove them from players
+      if (leavingPlayer.userId !== room.creatorId) {
+        const remainingPlayers = room.players.filter(p => p.userId !== userId);
+        await roomRepository.update(roomId, { players: remainingPlayers });
+      }
+      // If creator leaves, keep room WAITING so creator can return or opponent can join
     } else if (room.status === ROOM_STATUS.IN_PROGRESS) {
-      // If game was in progress, remaining player wins by forfeit
+      // If game was in progress and player explicitly left via REST, remaining player wins by forfeit
       const remainingPlayer = room.players.find(p => p.userId !== userId);
       if (remainingPlayer) {
         await roomRepository.update(roomId, {

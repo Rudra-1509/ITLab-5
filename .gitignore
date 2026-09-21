@@ -1,12 +1,17 @@
-# Dependencies
+# Dependencies & Build artifacts
 node_modules/
 backend/node_modules/
+frontend/node_modules/
 package-lock.json
 backend/package-lock.json
+frontend/package-lock.json
+dist/
+frontend/dist/
 
 # Environment variables
 .env
 backend/.env
+frontend/.env
 .env.local
 .env.*.local
 
